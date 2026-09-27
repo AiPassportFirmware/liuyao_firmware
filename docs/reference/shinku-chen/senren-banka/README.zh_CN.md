@@ -77,5 +77,5 @@ AI Passport 上的竖屏视觉小说阅读器，移植自《千恋＊万花》�
 - 仓库：`Shinku-Chen/ai-passport`，分支 `feature/senren-banka`，release `v0.1.0-senren-banka`
   （<https://github.com/Shinku-Chen/ai-passport/tree/feature/senren-banka>）。
 - 上游工作：[`hrk666666/Senren-Banka-MiBand-10`](https://github.com/hrk666666/Senren-Banka-MiBand-10)
-  —— 本分支所依据的手环同人移植版。该仓库未声明许可证；其剧本与素材由工具拉取后打包进固件，并在文档中注明来源。本移植仅供个人学习与交流，应用内的首次运行提示也写明了这一点。
+  —— 本分支所依据的手环同人移植版。该仓库未声明许可证；其剧本与素材随本分支收录在 `assets/senren-source/`（92 张背景、123 个立绘、570 张事件插图、112 个剧本分块，另含记录上游引用与逐文件 SHA-256 的 `MANIFEST.json`，也可用 `tools/senren_fetch_source.py` 重新拉取），打包进固件并在文档中注明来源；用该目录重打包与已提交的包字节级一致。本移植仅供个人学习与交流，应用内的首次运行提示也写明了这一点。
 - 社区投稿：作品 `community-07c775dc`（id 679），写这份档案时状态为审核中。

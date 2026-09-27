@@ -117,8 +117,12 @@ triggers the long-press action.
   (<https://github.com/Shinku-Chen/ai-passport/tree/feature/senren-banka>).
 - Upstream work: [`hrk666666/Senren-Banka-MiBand-10`](https://github.com/hrk666666/Senren-Banka-MiBand-10)
   — the Mi Band fan port this branch derives from. It declares no licence; its
-  script and artwork are fetched with a tool, packed into the firmware, and the
-  upstream project is credited as the source. The port is shared for personal
-  study and exchange only, and the first-run notice inside the app says so.
+  script and artwork ship with the branch under `assets/senren-source/` (92
+  backgrounds, 123 sprites, 570 event illustrations and 112 script chunks, plus a
+  `MANIFEST.json` recording the upstream ref and a SHA-256 per file; `tools/senren_fetch_source.py`
+  can fetch them again), packed into the firmware, and the upstream project is
+  credited as the source. Repacking from that directory is byte-identical to the
+  committed packs. The port is shared for personal study and exchange only, and
+  the first-run notice inside the app says so.
 - Released to the community as project `community-07c775dc` (id 679); the
   submission was pending review when this archive was written.
