@@ -45,7 +45,8 @@ static void home_build(struct liyao_app_s *app) {
     lv_obj_set_style_text_font(title, &liuyao_font_48, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(LY_COLOR_PAPER), 0);
     lv_label_set_text(title, "六爻");
-    lv_obj_set_pos(title, 78, 176);
+    // 用对齐而非固定 x:字宽随字距变化,对齐才能保证与太极同轴。
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 176);
 
     // 鎏金分隔线:两端金点,中间细线。
     liuyao_hairline(app->screen, 64, 234, 112);
@@ -93,7 +94,8 @@ static void category_build(struct liyao_app_s *app) {
         lv_obj_remove_style_all(panel);
         int col = i % 3;
         int row = i / 3;
-        lv_obj_set_pos(panel, 12 + col * 74, 44 + row * 62);
+        // 网格总宽 3*70+2*4=218,左右各留 11px,与四角角饰留白一致。
+        lv_obj_set_pos(panel, 11 + col * 74, 44 + row * 62);
         lv_obj_set_size(panel, 70, 54);
         lv_obj_t *label = lv_label_create(panel);
         lv_obj_set_style_text_font(label, &liuyao_font_24, 0);
@@ -110,9 +112,11 @@ static void category_key(struct liyao_app_s *app, bsp_btn_t btn, bsp_btn_ev_t ev
     if (btn == BSP_BTN_UP && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + LIUYAO_CAT_COUNT - 1) % LIUYAO_CAT_COUNT;
         grid_refresh(app, &app->category, LIUYAO_CAT_COUNT);
+        liuyao_pop(app->category.cells[app->sel]);
     } else if (btn == BSP_BTN_DOWN && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + 1) % LIUYAO_CAT_COUNT;
         grid_refresh(app, &app->category, LIUYAO_CAT_COUNT);
+        liuyao_pop(app->category.cells[app->sel]);
     } else if (btn == BSP_BTN_OK && ev == BSP_BTN_CLICK) {
         app->casting.category = (liuyao_category_t)app->sel;
         ly_app_goto(app, app->casting.category == LIUYAO_CAT_RELATION
@@ -132,7 +136,9 @@ static void perspective_build(struct liyao_app_s *app) {
     for (int i = 0; i < count; i++) {
         lv_obj_t *panel = lv_obj_create(app->screen);
         lv_obj_remove_style_all(panel);
-        lv_obj_set_pos(panel, 30, 52 + i * 52);
+        // 三行总高 3*44+2*8=140,在标题线(34)与提示(228)之间居中,
+        // 避免下方压出一大段空档。
+        lv_obj_set_pos(panel, 30, 62 + i * 52);
         lv_obj_set_size(panel, 180, 44);
         lv_obj_t *label = lv_label_create(panel);
         lv_obj_set_style_text_font(label, &liuyao_font_24, 0);
@@ -151,9 +157,11 @@ static void perspective_key(struct liyao_app_s *app, bsp_btn_t btn,
     if (btn == BSP_BTN_UP && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + count - 1) % count;
         grid_refresh(app, &app->perspective, count);
+        liuyao_pop(app->perspective.cells[app->sel]);
     } else if (btn == BSP_BTN_DOWN && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + 1) % count;
         grid_refresh(app, &app->perspective, count);
+        liuyao_pop(app->perspective.cells[app->sel]);
     } else if (btn == BSP_BTN_OK && ev == BSP_BTN_CLICK) {
         app->casting.perspective = (liuyao_perspective_t)app->sel;
         ly_app_goto(app, LY_STATE_DATE);
@@ -204,20 +212,26 @@ static void date_clamp(struct liyao_app_s *app) {
 
 static void date_build(struct liyao_app_s *app) {
     app->screen = liuyao_page_create("起卦时间");
-    // 字段横坐标按内容宽度分配(年 4 位数字最宽),避免相邻字段粘连。
-    static const int k_field_x[LY_DATE_FIELD_COUNT] = {10, 82, 132, 182};
+    // 四列等宽(54px)均分,年(4 位)到时(1-2 位)都以列中心对齐,
+    // 避免原来按内容宽度排布造成的疏密不一。
+    static const int k_field_x[LY_DATE_FIELD_COUNT] = {12, 66, 120, 174};
     for (int i = 0; i < LY_DATE_FIELD_COUNT; i++) {
         lv_obj_t *title = lv_label_create(app->screen);
         lv_obj_set_style_text_font(title, &liuyao_font_24, 0);
-        lv_obj_set_pos(title, k_field_x[i], 108);
+        lv_obj_set_width(title, 54);
+        lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_set_pos(title, k_field_x[i], 92);
         lv_label_set_text(title, k_date_title[i]);
         app->date.titles[i] = title;
         lv_obj_t *value = lv_label_create(app->screen);
         lv_obj_set_style_text_font(value, &liuyao_font_24, 0);
-        lv_obj_set_pos(value, k_field_x[i], 140);
+        lv_obj_set_width(value, 54);
+        lv_obj_set_style_text_align(value, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_set_pos(value, k_field_x[i], 124);
         app->date.values[i] = value;
-        app->date.marks[i] = liuyao_rect_create(app->screen, k_field_x[i], 172,
-                                                24, 3, LY_COLOR_PANEL_2);
+        // 选中标记(24px)也在列内居中。
+        app->date.marks[i] = liuyao_rect_create(app->screen, k_field_x[i] + 15,
+                                                164, 24, 3, LY_COLOR_PANEL_2);
         lv_obj_set_style_bg_opa(app->date.marks[i], LV_OPA_40, 0);
     }
     liuyao_hint_create(app->screen, 214, "上下调整 · OK 下一项");
@@ -264,7 +278,8 @@ static void method_build(struct liyao_app_s *app) {
     for (int i = 0; i < LY_METHOD_COUNT; i++) {
         lv_obj_t *panel = lv_obj_create(app->screen);
         lv_obj_remove_style_all(panel);
-        lv_obj_set_pos(panel, 30, 84 + i * 56);
+        // 两行总高 2*46+10=102,在标题线(34)与提示(214)之间居中。
+        lv_obj_set_pos(panel, 30, 74 + i * 56);
         lv_obj_set_size(panel, 180, 46);
         lv_obj_t *label = lv_label_create(panel);
         lv_obj_set_style_text_font(label, &liuyao_font_24, 0);
@@ -281,9 +296,11 @@ static void method_key(struct liyao_app_s *app, bsp_btn_t btn, bsp_btn_ev_t ev) 
     if (btn == BSP_BTN_UP && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + LY_METHOD_COUNT - 1) % LY_METHOD_COUNT;
         grid_refresh(app, &app->perspective, LY_METHOD_COUNT);
+        liuyao_pop(app->perspective.cells[app->sel]);
     } else if (btn == BSP_BTN_DOWN && ev == BSP_BTN_CLICK) {
         app->sel = (app->sel + 1) % LY_METHOD_COUNT;
         grid_refresh(app, &app->perspective, LY_METHOD_COUNT);
+        liuyao_pop(app->perspective.cells[app->sel]);
     } else if (btn == BSP_BTN_OK && ev == BSP_BTN_CLICK) {
         ly_app_goto(app, app->sel == 0 ? LY_STATE_CASTING : LY_STATE_MANUAL);
     } else if (btn == BSP_BTN_OK && ev == BSP_BTN_LONG) {

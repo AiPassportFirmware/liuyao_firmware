@@ -55,3 +55,7 @@ void liuyao_corner_ornaments(lv_obj_t *parent);
 
 // 底部操作提示行:统一字体/颜色,水平居中于 y。
 lv_obj_t *liuyao_hint_create(lv_obj_t *parent, int y, const char *text);
+
+// 选中微动效:以中心为轴,180ms 由 92% 弹回 100%(ease-out)。
+// 用于列表/网格的选中项切换,给"定焦"一个节奏感。
+void liuyao_pop(lv_obj_t *obj);

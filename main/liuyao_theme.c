@@ -53,6 +53,28 @@ lv_obj_t *liuyao_hint_create(lv_obj_t *parent, int y, const char *text) {
     return label;
 }
 
+// LVGL 9 的缩放是 256 制:256 = 100%,92% = 236。
+static void pop_anim(void *var, int32_t value) {
+    lv_obj_t *obj = (lv_obj_t *)var;
+    lv_obj_set_style_transform_scale_x(obj, value, 0);
+    lv_obj_set_style_transform_scale_y(obj, value, 0);
+}
+
+void liuyao_pop(lv_obj_t *obj) {
+    if (!obj) return;
+    // 轴心置中,否则对象会从左上角缩放。取样式宽高,不依赖布局时机。
+    lv_obj_set_style_transform_pivot_x(obj, lv_obj_get_style_width(obj, 0) / 2, 0);
+    lv_obj_set_style_transform_pivot_y(obj, lv_obj_get_style_height(obj, 0) / 2, 0);
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_exec_cb(&a, pop_anim);
+    lv_anim_set_values(&a, LV_SCALE_NONE * 92 / 100, LV_SCALE_NONE);
+    lv_anim_set_time(&a, 180);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    lv_anim_start(&a);
+}
+
 lv_obj_t *liuyao_page_create(const char *title) {
     lv_obj_t *root = lv_obj_create(NULL);
     // 纵向渐变玄墨底:上亮下暗,营造纵深。

@@ -15,6 +15,23 @@
 
 static const char *const TAG = "liuyao-cast";
 
+// 本爻结果的浮现动效:200ms 淡入,给"落定"一点节奏。
+static void cast_opa_anim(void *var, int32_t value) {
+    lv_obj_set_style_opa((lv_obj_t *)var, value, 0);
+}
+
+static void result_fade_in(struct liyao_app_s *app) {
+    lv_obj_set_style_opa(app->cast.result_label, LV_OPA_0, 0);
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, app->cast.result_label);
+    lv_anim_set_exec_cb(&a, cast_opa_anim);
+    lv_anim_set_values(&a, LV_OPA_0, LV_OPA_COVER);
+    lv_anim_set_time(&a, 200);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    lv_anim_start(&a);
+}
+
 // 动画帧计数与所属应用(同一时刻至多一段摇卦动画,文件内静态即可;
 // LVGL 9 的 lv_timer_t 不透明,不能直接读字段)。
 static int s_cast_ticks;
@@ -80,6 +97,7 @@ static void cast_anim_stop(struct liyao_app_s *app, bool settle) {
                           : value == 8 ? "少阴"
                           : value == 7 ? "少阳" : "老阴", value,
                           (value == 6 || value == 9) ? " · 动" : "");
+    result_fade_in(app);
     cast_show_progress(app);
     cast_refresh_header(app);
     if (app->cast_count >= LIUYAO_LINE_COUNT) {
@@ -136,16 +154,22 @@ static void cast_build(struct liyao_app_s *app) {
     s_cast_app = app;
     memset(&app->casting.lines, 0, sizeof(app->casting.lines));
 
+    // 标题与结果都以铜钱区(13..185,宽 172)中心对齐:文案长度随
+    // "第 N 爻"变化,用文本居中避免每次都偏。
     app->cast.title_label = lv_label_create(app->screen);
     lv_obj_set_style_text_font(app->cast.title_label, &liuyao_font_24, 0);
     lv_obj_set_style_text_color(app->cast.title_label, lv_color_hex(LY_COLOR_GOLD), 0);
-    lv_obj_set_pos(app->cast.title_label, 60, 46);
+    lv_obj_set_width(app->cast.title_label, 172);
+    lv_obj_set_style_text_align(app->cast.title_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_pos(app->cast.title_label, 13, 46);
 
     for (int i = 0; i < 3; i++) {
         lv_obj_t *coin = lv_obj_create(app->screen);
         lv_obj_remove_style_all(coin);
         lv_obj_set_size(coin, 52, 52);
-        lv_obj_set_pos(coin, 24 + i * 60, 92);
+        // 三枚铜钱总宽 3*52+2*8=172,在进度面板(x=198)左侧居中,
+        // 左右留白同为 13px。
+        lv_obj_set_pos(coin, 13 + i * 60, 92);
         lv_obj_set_style_radius(coin, LV_RADIUS_CIRCLE, 0);
         lv_obj_set_style_bg_color(coin, lv_color_hex(LY_COLOR_PANEL_2), 0);
         lv_obj_set_style_bg_opa(coin, LV_OPA_COVER, 0);
@@ -174,11 +198,13 @@ static void cast_build(struct liyao_app_s *app) {
     lv_obj_set_style_text_font(app->cast.result_label, &liuyao_font_24, 0);
     lv_obj_set_style_text_color(app->cast.result_label,
                                 lv_color_hex(LY_COLOR_PAPER), 0);
-    lv_obj_align(app->cast.result_label, LV_ALIGN_TOP_MID, 0, 166);
+    lv_obj_set_width(app->cast.result_label, 172);
+    lv_obj_set_style_text_align(app->cast.result_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_pos(app->cast.result_label, 13, 166);
     lv_label_set_text(app->cast.result_label, "");  // 清掉 LVGL 默认的 "Text"
 
     // 右侧六爻进度(上爻在上,初爻在下)收进面板,与铜钱区形成分区。
-    // 面板 x>=198:给第三枚铜钱(右缘 196)留出间隙,避免遮挡。
+    // 面板 x=198 与第三枚铜钱右缘(185)留 13px 间隙,与铜钱区左侧留白对称。
     lv_obj_t *progress_panel = liuyao_rect_create(app->screen, 198, 84, 40, 154,
                                                   LY_COLOR_PANEL);
     lv_obj_set_style_border_width(progress_panel, 1, 0);
@@ -333,6 +359,8 @@ static void manual_key(struct liyao_app_s *app, bsp_btn_t btn, bsp_btn_ev_t ev) 
         } else {
             app->manual_row++;
             manual_refresh(app);
+            // rows 自上而下是 上爻..初爻,行号要反算。
+            liuyao_pop(app->manual.rows[LIUYAO_LINE_COUNT - 1 - app->manual_row]);
         }
     } else if (btn == BSP_BTN_OK && ev == BSP_BTN_LONG) {
         ly_app_goto(app, LY_STATE_METHOD);

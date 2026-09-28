@@ -172,7 +172,7 @@ static void reading_build(struct liyao_app_s *app) {
     lv_obj_set_style_text_font(page_label, &liuyao_font_16, 0);
     lv_obj_set_style_text_color(page_label, lv_color_hex(LY_COLOR_GOLD), 0);
     lv_label_set_text(page_label, "");
-    lv_obj_set_pos(page_label, 150, 8);  // 电量在右上角,页码左移避开
+    lv_obj_set_pos(page_label, 78, 8);  // 紧跟标题右侧,远离右上角电量
     app->reading.page_label = page_label;
 
     liuyao_hint_create(app->screen, 266, "OK 下一页 · 长按回封面");
