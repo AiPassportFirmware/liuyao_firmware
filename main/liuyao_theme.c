@@ -53,25 +53,38 @@ lv_obj_t *liuyao_hint_create(lv_obj_t *parent, int y, const char *text) {
     return label;
 }
 
-// LVGL 9 的缩放是 256 制:256 = 100%,92% = 236。
+// 选中脉冲:阴影宽度 10→18→10(180ms 去程 + 回放),纯矩形重绘。
+// 刻意不用 transform_scale 做缩放:LVGL 9 会为缩放中的对象分配整块
+// ARGB8888 离屏层,无 PSRAM 的 C3 上分配失败时渲染线程会在
+// lv_draw_layer_alloc_buf 里无退避地空转(实测看门狗连续超时、
+// 输入全部丢弃),因此本应用禁止任何产生离屏层的样式动画。
 static void pop_anim(void *var, int32_t value) {
-    lv_obj_t *obj = (lv_obj_t *)var;
-    lv_obj_set_style_transform_scale_x(obj, value, 0);
-    lv_obj_set_style_transform_scale_y(obj, value, 0);
+    lv_obj_set_style_shadow_width((lv_obj_t *)var, value, 0);
+}
+
+// 回程 18→10:LVGL 9 移除了 playback,用完成回调接第二段动画。
+static void pop_out_start(lv_anim_t *a) {
+    lv_anim_t b;
+    lv_anim_init(&b);
+    lv_anim_set_var(&b, a->var);
+    lv_anim_set_exec_cb(&b, pop_anim);
+    lv_anim_set_values(&b, 18, 10);
+    lv_anim_set_time(&b, 180);
+    lv_anim_set_path_cb(&b, lv_anim_path_ease_in_out);
+    lv_anim_start(&b);
 }
 
 void liuyao_pop(lv_obj_t *obj) {
     if (!obj) return;
-    // 轴心置中,否则对象会从左上角缩放。取样式宽高,不依赖布局时机。
-    lv_obj_set_style_transform_pivot_x(obj, lv_obj_get_style_width(obj, 0) / 2, 0);
-    lv_obj_set_style_transform_pivot_y(obj, lv_obj_get_style_height(obj, 0) / 2, 0);
+    lv_anim_delete(obj, pop_anim);  // 快速连按时丢弃上一次未完的脉冲
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, obj);
     lv_anim_set_exec_cb(&a, pop_anim);
-    lv_anim_set_values(&a, LV_SCALE_NONE * 92 / 100, LV_SCALE_NONE);
+    lv_anim_set_values(&a, 10, 18);
     lv_anim_set_time(&a, 180);
     lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    lv_anim_set_completed_cb(&a, pop_out_start);
     lv_anim_start(&a);
 }
 

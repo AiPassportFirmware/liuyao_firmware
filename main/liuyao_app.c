@@ -199,12 +199,6 @@ void cast_failed(struct liyao_app_s *app) {
     ly_app_goto(app, LY_STATE_METHOD);
 }
 
-// 页面入场动画回调:整屏透明度渐变(300ms ease-out)。
-// 所有页面共用,在 enter_state 载入新屏后启动;旧屏删除时 LVGL 自动清理。
-static void screen_fade_anim(void *var, int32_t value) {
-    lv_obj_set_style_opa((lv_obj_t *)var, value, 0);
-}
-
 static void enter_state(struct liyao_app_s *app, ly_state_t state) {
     app->state = state;
     app->screen = NULL;
@@ -238,17 +232,10 @@ static void enter_state(struct liyao_app_s *app, ly_state_t state) {
             lv_obj_set_pos(app->battery, 182, 10);
         }
         refresh_battery(app);
-        // 入场淡入:先置全透再载入,首帧即从淡入起点开始,不会满显闪烁。
-        lv_obj_set_style_opa(app->screen, LV_OPA_0, 0);
+        // 不做整屏淡入:单缓冲部分刷新下,透明度接近 0 的首帧会把缓冲区
+        // 里的陈旧内容透出来,表现为切页闪屏;本板无 PSRAM,也无法用
+        // 离屏层做正确混合。瞬时切页是最稳的表现。
         lv_screen_load(app->screen);
-        lv_anim_t a;
-        lv_anim_init(&a);
-        lv_anim_set_var(&a, app->screen);
-        lv_anim_set_exec_cb(&a, screen_fade_anim);
-        lv_anim_set_values(&a, LV_OPA_0, LV_OPA_COVER);
-        lv_anim_set_time(&a, 300);
-        lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
-        lv_anim_start(&a);
     }
 }
 
