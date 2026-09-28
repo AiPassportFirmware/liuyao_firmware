@@ -56,6 +56,12 @@ The engineering rules themselves live under
 
 - [Offline Pokédex](sunny0826/offline-pokedex/README.md) — a fully offline Pokédex that embeds all 1,025 Pokémon, their sprites, and cries in the firmware.
 
+### mutalisk999
+
+**Application playbooks:**
+
+- [Liu Yao (Six Lines Divination)](mutalisk999/liuyao/README.md) — a fully offline Wenwang Najia divination firmware: shake-cast or manual entry on the device, a true Ganzhi calendar, a full najia chart, and a four-page classical reading.
+
 ## Adding an experience entry
 
 Each release may produce **one or more** reusable, post-release learnings; each is
