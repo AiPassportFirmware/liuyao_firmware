@@ -32,6 +32,7 @@
 - [沙耶之歌](shinku-chen/saya-no-uta/README.zh_CN.md) — 横屏视觉小说阅读器：44 章、3,828 段对白、3 个结局，全程离线，三个按键读完。
 - [亚托莉阅读器](shinku-chen/atri-reader/README.zh_CN.md) — 把完整《亚托莉 -My Dear Moments-》剧情装进 AI Passport 的竖屏视觉小说阅读器：34 章、1,069 幕、12,188 句对白、立绘跟说话人、三个结局，全程离线。
 - [星空列车与白的旅行](shinku-chen/starry-sky-railroad/README.zh_CN.md) — 把 39 章的同人移植剧本离线装进机身的竖屏视觉小说阅读器，立绘跟随说话人、每次换场景自动存档。
+- [千恋＊万花](shinku-chen/senren-banka/README.zh_CN.md) — 竖屏视觉小说阅读器，把整部剧情连通背景、立绘与事件插图装进设备，支持自动阅读、快进、跳过章节与多档存档。
 
 ### PhoenixZHC
 
